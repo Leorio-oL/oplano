@@ -93,6 +93,64 @@ body.combo-active{overflow:hidden}
 @media(max-width:680px){.combo-overlay{padding:10px;align-items:center}.combo-modal{grid-template-columns:1fr;max-height:calc(100dvh - 20px);border-radius:17px}.combo-visual{min-height:0;padding:18px;flex-direction:row;gap:15px;justify-content:flex-start}.combo-visual img{width:82px;transform:rotate(-3deg)}.combo-visual-note{font-size:11px;padding:8px 11px}.combo-content{padding:22px 22px 21px}.combo-content h2{font-size:24px;margin:10px 0}.combo-desc{margin-bottom:12px}.combo-price-block{padding-top:11px}.combo-price{font-size:32px}.combo-close{top:9px;right:9px;width:31px;height:31px}.combo-visual-note{margin-right:25px}}
 @media(max-width:360px){.combo-content{padding:16px}.combo-content h2{font-size:21px}.combo-desc{font-size:11px}.combo-list span{font-size:10px}.combo-buy{font-size:11px}}
 
+/* V3: garantia destacada e modal responsivo para celulares, incluindo telas baixas */
+.pricing small {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  margin-top: 6px;
+  border: 1px solid #b7e8d2;
+  border-radius: 999px;
+  background: #ecfff5;
+  color: #126d4b;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.pricing small svg {width:19px;height:19px;flex:none}
+.combo-overlay {z-index:10000;padding:clamp(10px,2vw,22px);overflow-y:auto;align-items:center}
+.combo-modal {width:min(785px,100%);max-height:calc(100dvh - 28px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;grid-template-columns:minmax(0,38%) minmax(0,62%)}
+.combo-visual {min-height:0;height:100%;padding:26px 16px}
+.combo-content {padding:32px 32px 26px}
+.combo-close {box-shadow:0 3px 12px rgba(5,27,50,.12)}
+@media(max-width:680px){
+  .combo-overlay {padding:8px;align-items:center}
+  .combo-modal {display:flex;flex-direction:column;width:min(450px,100%);max-height:calc(100dvh - 16px);border-radius:18px;overflow-y:auto}
+  .combo-visual {width:100%;flex:none;height:auto;min-height:0;padding:12px 16px;justify-content:flex-start;gap:12px}
+  .combo-visual img {width:70px;height:88px;object-fit:cover;transform:rotate(-3deg);flex:none}
+  .combo-visual-note {margin-right:29px;font-size:11px;padding:7px 10px}
+  .combo-content {padding:17px 19px 18px}
+  .combo-content h2 {font-size:clamp(21px,5.8vw,26px);line-height:1.14;margin:10px 0 8px}
+  .combo-desc {font-size:12px;line-height:1.45;margin-bottom:11px}
+  .combo-list {gap:6px;margin-bottom:11px}
+  .combo-list span {min-width:0;font-size:11px;padding:7px 8px}
+  .combo-price-block {padding-top:9px}
+  .combo-price {font-size:30px;margin:1px 0}
+  .combo-extra {font-size:11px;margin-bottom:10px}
+  .combo-clock {padding:8px 10px;margin-bottom:10px}
+  .combo-timer {font-size:21px}
+  .combo-buy {min-height:48px;font-size:12px}
+  .combo-skip {font-size:11px;margin-top:7px;padding:3px}
+  .combo-close {top:9px;right:9px;width:34px;height:34px}
+  .pricing small {font-size:14px;padding:9px 12px}
+}
+@media(max-width:360px){
+  .combo-modal {max-height:calc(100dvh - 12px)}
+  .combo-content {padding:14px 15px 16px}
+  .combo-visual {padding:10px 13px}
+  .combo-visual img {width:59px;height:75px}
+  .combo-content h2 {font-size:21px}
+  .combo-desc {font-size:11px}
+  .combo-list span {font-size:10px;padding:6px}
+}
+@media(max-height:620px) and (max-width:680px){
+  .combo-overlay {align-items:start}
+  .combo-modal {margin:auto 0;max-height:calc(100dvh - 12px)}
+  .combo-visual {padding:9px 14px}
+  .combo-visual img {width:52px;height:65px}
+  .combo-content {padding-top:12px}
+}
 </style>
   <script>
 // Configure seu checkout aqui antes de publicar campanhas.
@@ -242,6 +300,8 @@ window.PLANO_AMERICA_CONFIG = Object.freeze({
   }
 
   function render() {
+    // Uma nova pergunta/tela cancela o aviso da tela anterior.
+    if (mobileOfferDelayId !== null) { clearTimeout(mobileOfferDelayId); mobileOfferDelayId = null; }
     updateProgress();
     if (view === 'intro') {
       stepView.innerHTML = '<div class="intro-view"><div class="round-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 3 6v6c0 5 3.6 8.4 9 10 5.4-1.6 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg></div><span class="kicker">QUIZ RÁPIDO · 5 PERGUNTAS</span><h2>Já imaginou ter um <em>Plano B</em> para sua família?</h2><p>Responda a cinco perguntas e conheça um guia que pode ajudar você a começar a organizar esse projeto.</p><button class="primary-button" id="startButton" type="button">COMEÇAR AGORA <span aria-hidden="true">→</span></button><span class="intro-footnote">É rápido, gratuito e sem cadastro.</span></div>';
@@ -267,10 +327,24 @@ window.PLANO_AMERICA_CONFIG = Object.freeze({
     } else {
       const price = formatter.format(Number(config.price) || 17.99);
       const days = Number(config.guaranteeDays) || 7;
-      stepView.innerHTML = '<div class="offer-view"><div class="success-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></div><span class="kicker">VOCÊ CONCLUIU AS 5 PERGUNTAS</span><h2>Seu <em>Plano B</em> pode começar agora.</h2><p>Não é sobre mudar amanhã. É sobre entender seus caminhos e começar a se planejar.</p><div class="product-box"><img class="product-cover-photo" src="assets/plano-america-capa.webp" alt="Capa do guia digital Plano América" width="112" height="140" loading="lazy" /><div class="product-description"><span class="product-tag">ACESSO DIGITAL</span><h3>Plano América</h3><p>Um guia introdutório sobre vistos, documentos, custos e planejamento para morar legalmente nos EUA.</p></div></div><div class="offer-includes"><span><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg> Guia digital em PDF</span><span><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg> Conteúdo organizado por etapas</span><span><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg> Planejamento inicial</span></div><div class="pricing"><span>Comece a se planejar por apenas</span><strong>' + price + '</strong><small><svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 3.6 8.4 9 10 5.4-1.6 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg> ' + days + ' dias de garantia</small></div><button type="button" class="primary-button offer-button" id="checkoutButton">QUERO SAIR DO BRASIL! <span aria-hidden="true">→</span></button><p class="checkout-notice" id="checkoutNotice" role="alert" hidden></p><p class="fine-print">Material informativo. A compra não garante visto, trabalho ou residência nos EUA.</p><button class="combo-open-link" id="comboOpenButton" type="button">Conhecer o pacote com todos os guias →</button><button class="restart-link" id="restartButton" type="button">← Refazer o quiz</button></div>';
+      stepView.innerHTML = '<div class="offer-view"><div class="success-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></div><span class="kicker">VOCÊ CONCLUIU AS 5 PERGUNTAS</span><h2>Seu <em>Plano B</em> pode começar agora.</h2><p>Não é sobre mudar amanhã. É sobre entender seus caminhos e começar a se planejar.</p><div class="product-box"><img class="product-cover-photo" src="assets/plano-america-capa.webp" alt="Capa do guia digital Plano América" width="112" height="140" loading="lazy" /><div class="product-description"><span class="product-tag">ACESSO DIGITAL</span><h3>Plano América</h3><p>Um guia introdutório sobre vistos, documentos, custos e planejamento para morar legalmente nos EUA.</p></div></div><div class="offer-includes"><span><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg> Guia digital em PDF</span><span><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg> Conteúdo organizado por etapas</span><span><svg viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></svg> Planejamento inicial</span></div><div class="pricing"><span>Comece a se planejar por apenas</span><strong>' + price + '</strong><small><svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5 3.6 8.4 9 10 5.4-1.6 9-5 9-10V6l-9-4Z"/><path d="m9 12 2 2 4-4"/></svg> ' + days + ' dias de garantia</small></div><button type="button" class="primary-button offer-button" id="checkoutButton">QUERO SAIR DO BRASIL! <span aria-hidden="true">→</span></button><p class="checkout-notice" id="checkoutNotice" role="alert" hidden></p><p class="fine-print">Material informativo. A compra não garante visto, trabalho ou residência nos EUA.</p><a class="combo-open-link" id="comboOpenButton" href="https://payfast.greenn.com.br/89j3m7f" aria-label="Ir para o checkout do pacote com todos os guias">Conhecer o pacote com todos os guias →</a><button class="restart-link" id="restartButton" type="button">← Refazer o quiz</button></div>';
       document.getElementById('checkoutButton').addEventListener('click', checkout);
-      document.getElementById('comboOpenButton').addEventListener('click', () => openComboOffer('offer_link'));
+      const comboDirectLink = document.getElementById('comboOpenButton');
+      // Link real: funciona mesmo sem JavaScript e leva diretamente ao checkout do pacote.
+      comboDirectLink.href = withTracking(config.comboCheckoutUrl) || 'https://payfast.greenn.com.br/89j3m7f';
+      comboDirectLink.addEventListener('click', () => {
+        leavingForCheckout = true;
+        track('begin_checkout', { offer:'combo', source:'offer_link', value:Number(config.comboPrice) || 22.90, currency:'BRL' });
+      });
       document.getElementById('restartButton').addEventListener('click', () => { view = 'intro'; step = 0; answers = []; render(); });
+      // Não existe mouseleave no touchscreen. Depois de ver a oferta, o visitante
+      // recebe uma única oportunidade de conhecer o combo (também no mobile).
+      if (window.matchMedia('(max-width: 767px), (pointer: coarse)').matches) {
+        mobileOfferDelayId = window.setTimeout(() => {
+          mobileOfferDelayId = null;
+          if (view === 'offer' && !document.hidden && !leavingForCheckout) openComboOffer('mobile_offer_delay');
+        }, 11000);
+      }
     }
     animate();
   }
@@ -298,8 +372,8 @@ window.PLANO_AMERICA_CONFIG = Object.freeze({
   const comboTimer = document.getElementById('comboTimer');
   const comboClockWrap = document.getElementById('comboClockWrap');
   const comboExpired = document.getElementById('comboExpired');
-  const COMBO_DEADLINE_KEY = 'planoAmericaComboDeadline_v2';
-  const COMBO_DISMISS_KEY = 'planoAmericaComboDismissed_v2';
+  const COMBO_DEADLINE_KEY = 'planoAmericaComboDeadline_v3';
+  const COMBO_DISMISS_KEY = 'planoAmericaComboDismissed_v3';
   const OFFER_DELAY_MS = 6500;
   const pageOpenedAt = Date.now();
   const comboLength = (Number(config.comboMinutes) || 10) * 60 * 1000;
@@ -309,6 +383,7 @@ window.PLANO_AMERICA_CONFIG = Object.freeze({
   let lastMobileY = window.scrollY;
   let mobilePassedThreshold = false;
   let mobileUpwardDistance = 0;
+  let mobileOfferDelayId = null;
 
   function safeStorage(kind) {
     try {
@@ -409,12 +484,12 @@ window.PLANO_AMERICA_CONFIG = Object.freeze({
     if (window.matchMedia('(pointer:fine)').matches) openComboOffer('exit_top');
   });
   window.addEventListener('scroll', () => {
-    if (!window.matchMedia('(pointer:coarse)').matches) return;
+    if (!window.matchMedia('(max-width: 767px), (pointer: coarse)').matches || view !== 'offer' || leavingForCheckout) return;
     const y = window.scrollY;
-    if (y > 280) mobilePassedThreshold = true;
+    if (y > 100) mobilePassedThreshold = true;
     if (y > lastMobileY + 3) mobileUpwardDistance = 0;
     else if (y < lastMobileY - 3) mobileUpwardDistance += lastMobileY - y;
-    if (mobilePassedThreshold && mobileUpwardDistance >= 120 && Date.now() - pageOpenedAt > 8000) {
+    if (mobilePassedThreshold && mobileUpwardDistance >= 85 && Date.now() - pageOpenedAt > 6500) {
       mobilePassedThreshold = false;
       mobileUpwardDistance = 0;
       openComboOffer('mobile_scroll_up');
